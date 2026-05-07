@@ -55,7 +55,7 @@ class PenilaianController extends Controller
             // dari selsain pengoreksi
             $filtered = $banksoal->reject(function ($value, $key) use($user) {
                 $correctors = json_decode($value->correctors, true);
-                if (count($correctors) < 1) {
+                if (!is_array($correctors) || count($correctors) < 1) {
                     return true;
                 }
 
@@ -109,7 +109,11 @@ class PenilaianController extends Controller
 
             # Hanya pengoreksi yang dapat data ini
             $filtered = $banksoal->reject(function ($value, $key) use($user) {
-                return !in_array($user->id, json_decode($value->correctors, true));
+                $correctors = json_decode($value->correctors, true);
+                if (!is_array($correctors)) {
+                    return true;
+                }
+                return !in_array($user->id, $correctors);
             })->values();
 
             return SendResponse::acceptData($filtered);
