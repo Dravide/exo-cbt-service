@@ -159,6 +159,7 @@ class ResultController extends Controller
 
         $jurusan = strval($request->get('jurusan',''));
         $group = strval($request->get('group',''));
+        $groupName = '';
 
         if (Uuid::isValid($jurusan)) {
             $res = $res->where('t_1.jurusan_id', $jurusan);
@@ -168,7 +169,10 @@ class ResultController extends Controller
             $groupObj = DB::table('groups')
                 ->where('id', $group)
                 ->first();
-            $parent_id = strval($groupObj->id);
+            if ($groupObj) {
+                $groupName = ' - ' . $groupObj->name;
+            }
+            $parent_id = $groupObj ? strval($groupObj->id) : '';
 
             if (Uuid::isValid($parent_id)) {
                 $childs = DB::table('groups')
@@ -200,7 +204,7 @@ class ResultController extends Controller
         $spreadsheet = HasilUjianExport::export($res,$jadwal->alias);
         $writer = new Xlsx($spreadsheet);
 
-        $filename = 'Hasil ujian '.$jadwal->alias;
+        $filename = 'Hasil ujian '.$jadwal->alias . $groupName;
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         header('Content-Disposition: attachment; filename="'.$filename.'.xlsx"');
         $writer->save('php://output');
@@ -395,6 +399,7 @@ class ResultController extends Controller
 
         $jurusan = request()->jurusan;
         $group = request()->group;
+        $groupName = '';
 
         $soals = DB::table('soals')->where('banksoal_id', $banksoal->id)
             ->whereIn('tipe_soal', [
@@ -419,7 +424,10 @@ class ResultController extends Controller
             $groupObj = DB::table('groups')
                 ->where('id', $group)
                 ->first();
-            if ($groupObj->parent_id == 0) {
+            if ($groupObj) {
+                $groupName = ' - ' . $groupObj->name;
+            }
+            if ($groupObj && $groupObj->parent_id == 0) {
                 $childs = DB::table('groups')
                     ->where('parent_id', $group)
                     ->select('id')
@@ -469,7 +477,7 @@ class ResultController extends Controller
         $spreadsheet = CapaianPesertaUjianExport::run($data, $banksoal->kode_banksoal, $jadwal->alias);
         $writer = new Xlsx($spreadsheet);
 
-        $filename = 'Capaian siswa '.$banksoal->kode_banksoal.' '.$jadwal->alias;
+        $filename = 'Capaian siswa '.$banksoal->kode_banksoal.' '.$jadwal->alias . $groupName;
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         header('Content-Disposition: attachment; filename="'.$filename.'.xlsx"');
         $writer->save('php://output');
@@ -512,6 +520,7 @@ class ResultController extends Controller
 
         $jurusan = request()->jurusan;
         $group = request()->group;
+        $groupName = '';
 
         $soals = DB::table('soals')->where('banksoal_id', $banksoal->id)
             ->where('tipe_soal', SoalConstant::TIPE_PG)
@@ -530,7 +539,10 @@ class ResultController extends Controller
             $groupObj = DB::table('groups')
                 ->where('id', $group)
                 ->first();
-            if ($groupObj->parent_id == '' || $groupObj->parent_id == '0') {
+            if ($groupObj) {
+                $groupName = ' - ' . $groupObj->name;
+            }
+            if ($groupObj && ($groupObj->parent_id == '' || $groupObj->parent_id == '0')) {
                 $childs = DB::table('groups')
                     ->where('parent_id', $group)
                     ->select('id')
@@ -581,7 +593,7 @@ class ResultController extends Controller
         $spreadsheet = CapaianPesertaMCUjianExport::run($data, $banksoal->kode_banksoal, $jadwal->alias);
         $writer = new Xlsx($spreadsheet);
 
-        $filename = 'Capaian siswa [MC]'.$banksoal->kode_banksoal.' '.$jadwal->alias;
+        $filename = 'Capaian siswa [MC]'.$banksoal->kode_banksoal.' '.$jadwal->alias . $groupName;
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         header('Content-Disposition: attachment; filename="'.$filename.'.xlsx"');
         $writer->save('php://output');
